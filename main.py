@@ -1,18 +1,21 @@
 import asyncio
 import logging
+import os
 import sys
+from dotenv import load_dotenv
 
 from aiogram import types, Bot, Dispatcher
 from aiogram import F
 from aiogram.filters.command import Command
 from aiogram.types import Message
 
-from config import API_token
 import database
 import my_keyboards as kb
 
+load_dotenv()
+key = os.getenv('API_token')
 
-bot = Bot(token=API_token)
+bot = Bot(token=key)
 dp = Dispatcher()
 
 
