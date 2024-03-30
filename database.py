@@ -1,23 +1,15 @@
 import sqlite3
 
-
 async def db_connect() -> None:
 
+    global db, cursor
+
     db = sqlite3.connect("schedule.db")
+    db.row_factory = sqlite3.Row
     cursor = db.cursor()
 
-    #
-    # group_341A = cursor.execute("""SELECT DISTINCT name FROM Ordinary_Subject
-    # WHERE group_341A = 1""")
-    #
-    # group_341B = cursor.execute("""SELECT DISTINCT name FROM Ordinary_Subject
-    # WHERE group_341B = 1""")
-    #
-    # group_341Short = cursor.execute("""SELECT DISTINCT name FROM Ordinary_Subject
-    # WHERE group_341Short = 1""")
 
-
-    cursor.execute("""SELECT DISTINCT name FROM Ordinary_Subject WHERE group_341A = 1""").fetchall()
-
-    cursor.close()
-    db.close()
+def get_ordinary_subject(group):
+    cursor.execute(f"SELECT DISTINCT name FROM Ordinary_Subject WHERE group_{group} = 1 ORDER BY name")
+    data = cursor.fetchall()
+    return data
