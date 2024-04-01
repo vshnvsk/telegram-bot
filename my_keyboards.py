@@ -14,7 +14,7 @@ def start() -> InlineKeyboardMarkup:
     return buttons
 
 
-def get_keyboard_select() -> InlineKeyboardMarkup:
+def get_keyboard_select(has_selection: bool) -> InlineKeyboardMarkup:
     # setting up the selection button
     buttons = InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton(text="Програмування мовою Ruby", callback_data="select_ruby")],
@@ -23,7 +23,19 @@ def get_keyboard_select() -> InlineKeyboardMarkup:
         [InlineKeyboardButton(text="Теорія інформації та кодування", callback_data="select_infocode")],
         [InlineKeyboardButton(text="UX/UI дизайн та Web Usability", callback_data="select_webdesign")],
         [InlineKeyboardButton(text="Практика особистої та ділової комунікації іноземною мовою", callback_data="select_english")],
+        [InlineKeyboardButton(text="Скасувати❌", callback_data="select_reset")],
         [InlineKeyboardButton(text="Готово✅", callback_data="select_finish")]
+    ])
+
+    if has_selection:
+        buttons.insert(-1, [InlineKeyboardButton(text="Скасувати❌", callback_data="select_reset")])
+
+    return buttons
+
+
+def get_all_schedule() -> InlineKeyboardMarkup:
+    buttons = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="Розклад🗓️", callback_data="schedule")]
     ])
 
     return buttons
