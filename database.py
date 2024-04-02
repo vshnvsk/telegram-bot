@@ -15,13 +15,14 @@ async def db_connect() -> None:
     cursor = db.cursor()
 
 
+
 def get_ordinary_subject(group):
-    cursor.execute(f"SELECT DISTINCT name FROM Ordinary_Subject WHERE group_{group} = 1 ORDER BY name")
+    cursor.execute(f"SELECT DISTINCT name FROM Ordinary_Subjects WHERE group_{group} = 1 ORDER BY name")
     data = cursor.fetchall()
     return data
 
 
 def get_selected_subject(subject):
-    cursor.execute(f"SELECT DISTINCT name FROM Elective_Subject WHERE abbreviation = '{subject}' ORDER BY name")
+    cursor.execute(f"SELECT DISTINCT name FROM Elective_Subjects WHERE abbreviation = '{subject}' ORDER BY name")
     data = cursor.fetchall()
     return data

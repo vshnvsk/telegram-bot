@@ -37,6 +37,8 @@ async def on_startup(_):
 
 @dp.message(Command("start"))
 async def command_start_handler(message: Message):
+    user_select[message.from_user.id] = []
+    user_data[message.from_user.id] = 0
     await message.answer_sticker(sticker="CAACAgIAAxkBAAEL0ORmCBKDjapEhTrTGNJJA-eSAtOFtwAChwIAAladvQpC7XQrQFfQkDQE")
     await message.answer(f"Привіт, {message.from_user.full_name}! Вибери свою підгрупу:",
                          reply_markup=kb.start())
@@ -66,10 +68,9 @@ async def callback_group(callback: CallbackQuery):
             message_text += f"- {row[0]}\n"
 
         await callback.message.answer(message_text)
-
         await callback.message.edit_reply_markup(reply_markup=None)
-
-        await callback.message.answer("Виберіть додаткові предмети:", reply_markup=kb.get_keyboard_select(False))
+        await callback.message.answer("Виберіть додаткові предмети:",
+                                      reply_markup=kb.get_keyboard_select(False))
 
 
 #--------------------------------For the selection button(elective subject)------------------------------
@@ -111,7 +112,11 @@ async def callbacks_selected_subject(callback: CallbackQuery):
             sub = {name_subject: subject}
             if callback.from_user.id not in user_select:
                 user_select[callback.from_user.id] = []
-            user_select[callback.from_user.id].append(sub)
+            if len(user_select[callback.from_user.id]) < 3:
+                user_select[callback.from_user.id].append(sub)
+            else:
+                await callback.message.answer("Ви вже обрали максимальну кількість предметів❗")
+                return
 
         elif subject == "reset":
             user_select[callback.from_user.id] = []
@@ -121,23 +126,27 @@ async def callbacks_selected_subject(callback: CallbackQuery):
         all_subject = []
 
         if action == "finish":
-            await callback.message.edit_text(f"Ви вибрали: {user_value} предмет(-а)")
+            if len(user_select[callback.from_user.id]) < 3:
+                await callback.message.answer("Ви обрали недостатню кількість предметів❗")
+                return
+            else:
+                await callback.message.edit_text(f"Ви вибрали: {user_value} предмет(-а)")
 
-            for values_for_user in user_select.values():
-                for value in values_for_user:
-                    selected_subject = database.get_selected_subject(value['name'])
-                    all_subject += selected_subject
+                for values_for_user in user_select.values():
+                    for value in values_for_user:
+                        selected_subject = database.get_selected_subject(value['name'])
+                        all_subject += selected_subject
 
-            if not selected_subject:
-                await callback.message.answer("Nothing(")
-                return await callback.answer()
+                if not selected_subject:
+                    await callback.message.answer("Nothing(")
+                    return await callback.answer()
 
-            message_text = f"Перелік вибіркових дисциплін:\n"
-            for row in all_subject:
-                message_text += f"- {row[0]}\n"
+                message_text = f"Перелік вибіркових дисциплін:\n"
+                for row in all_subject:
+                    message_text += f"- {row[0]}\n"
 
-            await callback.message.answer(message_text)
-            return
+                await callback.message.answer(message_text)
+                return
 
         if action == "reset":
             user_data[callback.from_user.id] = 0
@@ -166,7 +175,8 @@ async def callback_schedule(callback: CallbackQuery):
     with suppress(TelegramBadRequest):
         for user_id in user_group.keys():
             if user_id in user_select:
-                user_info[user_id] = {'group_': user_group[user_id]['group_'], 'selected subject': user_select[user_id]}
+                user_info[user_id] = {'group_': user_group[user_id]['group_'],
+                                      'selected subject': user_select[user_id]}
 
         print(user_info)
 
