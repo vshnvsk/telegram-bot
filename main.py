@@ -18,7 +18,6 @@ import my_keyboards as kb
 user_data = {}
 user_group = {}
 user_select = {}
-user_info = {}
 name_subject = 'name'
 
 load_dotenv()
@@ -48,14 +47,14 @@ async def command_start_handler(message: Message):
 async def callback_group(callback: CallbackQuery):
     with suppress(TelegramBadRequest):
         group = callback.data.split("_")[1]
+        local_user_group = user_group.get(callback.from_user.id, {})
 
-        user_group[callback.from_user.id] = {
-            "group_": group
-        }
+        local_user_group["group"] = group
+        user_group[callback.from_user.id] = local_user_group
 
         await callback.message.answer(f"Вибрано {group}")
 
-        print(user_group)
+        print(local_user_group)
 
         ordinary_subject = database.get_ordinary_subject(group)
 
@@ -66,6 +65,8 @@ async def callback_group(callback: CallbackQuery):
         message_text = f"Перелік основних дисциплін:\n"
         for row in ordinary_subject:
             message_text += f"- {row[0]}\n"
+
+        print(f"User ID: {callback.from_user.id}, Group: {group}")
 
         await callback.message.answer(message_text)
         await callback.message.edit_reply_markup(reply_markup=None)
@@ -108,34 +109,33 @@ async def callbacks_selected_subject(callback: CallbackQuery):
         action = callback.data.split("_")[1]
         subject = callback.data.split("_")[1]
 
+        local_user_select = user_select.get(callback.from_user.id, [])
+
         if subject != "finish" and subject != "reset":
             sub = {name_subject: subject}
-            if callback.from_user.id not in user_select:
-                user_select[callback.from_user.id] = []
-            if len(user_select[callback.from_user.id]) < 3:
-                user_select[callback.from_user.id].append(sub)
+            if len(local_user_select) < 3:
+                local_user_select.append(sub)
             else:
                 await callback.message.answer("Ви вже обрали максимальну кількість предметів❗")
                 return
 
         elif subject == "reset":
-            user_select[callback.from_user.id] = []
+            local_user_select = []
 
-        print(user_select)
+        print(local_user_select)
 
         all_subject = []
 
         if action == "finish":
-            if len(user_select[callback.from_user.id]) < 3:
+            if len(local_user_select) < 3:
                 await callback.message.answer("Ви обрали недостатню кількість предметів❗")
                 return
             else:
                 await callback.message.edit_text(f"Ви вибрали: {user_value} предмет(-а)")
 
-                for values_for_user in user_select.values():
-                    for value in values_for_user:
-                        selected_subject = database.get_selected_subject(value['name'])
-                        all_subject += selected_subject
+                for value in local_user_select:
+                    selected_subject = database.get_selected_subject(value['name'])
+                    all_subject += selected_subject
 
                 if not selected_subject:
                     await callback.message.answer("Nothing(")
@@ -149,6 +149,7 @@ async def callbacks_selected_subject(callback: CallbackQuery):
                 return
 
         if action == "reset":
+            user_select[callback.from_user.id] = []
             user_data[callback.from_user.id] = 0
             await update_num_text(callback.message, 0)
             await callback.answer()
@@ -173,12 +174,14 @@ async def start_schedule(message: Message):
 @dp.callback_query(F.data == "schedule")
 async def callback_schedule(callback: CallbackQuery):
     with suppress(TelegramBadRequest):
-        for user_id in user_group.keys():
-            if user_id in user_select:
-                user_info[user_id] = {'group_': user_group[user_id]['group_'],
-                                      'selected subject': user_select[user_id]}
+        combined_data = {}
 
-        print(user_info)
+        for user_id, group_data in user_group.items():
+            if user_id in user_select:
+                selected_subjects = user_select[user_id]
+                combined_data[user_id] = {'group': group_data['group'], 'selected_subjects': selected_subjects}
+
+        print(combined_data)
 
         await callback.answer()
 
