@@ -32,7 +32,7 @@ async def on_startup(_):
     print("Connect")
 
 
-#-------------------------------For the start button and subgroup selection------------------------------
+# -------------------------------For the start button and subgroup selection------------------------------
 
 @dp.message(Command("start"))
 async def command_start_handler(message: Message):
@@ -74,7 +74,7 @@ async def callback_group(callback: CallbackQuery):
                                       reply_markup=kb.get_keyboard_select(False))
 
 
-#--------------------------------For the selection button(elective subject)------------------------------
+# --------------------------------For the selection button(elective subject)------------------------------
 
 @dp.message(Command("subjects"))
 async def start_elective_subject(message: Message):
@@ -112,7 +112,7 @@ async def callbacks_selected_subject(callback: CallbackQuery):
         local_user_select = user_select.get(callback.from_user.id, [])
 
         if subject != "finish" and subject != "reset":
-            sub = {name_subject: subject}
+            sub = {'name': subject}
             if len(local_user_select) < 3:
                 local_user_select.append(sub)
             else:
@@ -137,7 +137,7 @@ async def callbacks_selected_subject(callback: CallbackQuery):
                     selected_subject = database.get_selected_subject(value['name'])
                     all_subject += selected_subject
 
-                if not selected_subject:
+                if not all_subject:
                     await callback.message.answer("Nothing(")
                     return await callback.answer()
 
@@ -146,6 +146,8 @@ async def callbacks_selected_subject(callback: CallbackQuery):
                     message_text += f"- {row[0]}\n"
 
                 await callback.message.answer(message_text)
+                await callback.message.answer("Ваш розклад:",
+                                              reply_markup=kb.get_all_schedule())
                 return
 
         if action == "reset":
@@ -163,7 +165,7 @@ async def callbacks_selected_subject(callback: CallbackQuery):
         return
 
 
-#-----------------------------For the schedule------------------------------
+# -----------------------------For the schedule------------------------------
 
 @dp.message(Command("schedule"))
 async def start_schedule(message: Message):
@@ -174,6 +176,8 @@ async def start_schedule(message: Message):
 @dp.callback_query(F.data == "schedule")
 async def callback_schedule(callback: CallbackQuery):
     with suppress(TelegramBadRequest):
+        global user_group, user_select
+
         combined_data = {}
 
         for user_id, group_data in user_group.items():
@@ -182,6 +186,26 @@ async def callback_schedule(callback: CallbackQuery):
                 combined_data[user_id] = {'group': group_data['group'], 'selected_subjects': selected_subjects}
 
         print(combined_data)
+        print(user_group)
+        print(user_select)
+
+        # for value in local_user_select:
+        #     selected_subject = database.get_selected_subject(value['name'])
+        #     all_subject += selected_subject
+        #
+        # if not all_subject:
+        #     await callback.message.answer("Nothing(")
+        #     return await callback.answer()
+        #
+        # message_text = f"Перелік вибіркових дисциплін:\n"
+        # for row in all_subject:
+        #     message_text += f"- {row[0]}\n"
+
+        schedule = database.get_all_subject_second_week(user_group, user_select.value['name'])
+
+        message_text = f"Розклад:\n"
+        for row in schedule:
+            message_text += f"- {row[0]}\n"
 
         await callback.answer()
 
