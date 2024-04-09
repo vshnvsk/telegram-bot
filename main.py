@@ -1,5 +1,5 @@
 import asyncio
-import calendar
+from datetime import datetime
 import logging
 import os
 import sys
@@ -13,6 +13,7 @@ from aiogram.filters.command import Command
 from aiogram.types import Message, CallbackQuery
 from contextlib import suppress
 from aiogram.exceptions import TelegramBadRequest
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 import database
 import my_keyboards as kb
@@ -204,11 +205,19 @@ async def callback_schedule(callback: CallbackQuery):
         print(info_group)
         print(info_select_tuple)
 
-        schedule = database.get_all_subject_first_week(info_group, info_select_tuple)
+        current_date = datetime.now()
+        week_number = current_date.isocalendar()[1]
+
+        if week_number % 2 == 0:
+            await bot.send_message(chat_id=callback.from_user.id,
+                                   text="Зараз навчання за ІІ-им тижнем")
+            schedule = database.get_all_subject_second_week(info_group, info_select_tuple)
+        else:
+            await bot.send_message(chat_id=callback.from_user.id,
+                                   text="Зараз навчання за І-им тижнем")
+            schedule = database.get_all_subject_first_week(info_group, info_select_tuple)
 
         print(schedule)
-
-
 
         previous_weekday = ""
         message_schedule = ""
@@ -232,6 +241,7 @@ async def callback_schedule(callback: CallbackQuery):
         await bot.send_message(chat_id=callback.from_user.id, text=message_schedule, parse_mode=ParseMode.HTML)
         await asyncio.sleep(1)
 
+        await callback.message.edit_reply_markup(reply_markup=None)
         await callback.answer()
 
 
