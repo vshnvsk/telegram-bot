@@ -52,7 +52,8 @@ async def callback_group(callback: CallbackQuery):
         local_user_group["group"] = group
         user_group[callback.from_user.id] = local_user_group
 
-        await callback.message.answer(f"Вибрано {group}")
+        await bot.send_message(chat_id=callback.from_user.id,
+                               text=f"Вибрано {group}")
 
         print(local_user_group)
 
@@ -68,7 +69,8 @@ async def callback_group(callback: CallbackQuery):
 
         print(f"User ID: {callback.from_user.id}, Group: {group}")
 
-        await callback.message.answer(message_text)
+        await bot.send_message(chat_id=callback.from_user.id,
+                               text=message_text)
         await callback.message.edit_reply_markup(reply_markup=None)
         await callback.message.answer("Виберіть додаткові предмети:",
                                       reply_markup=kb.get_keyboard_select(False))
@@ -116,7 +118,8 @@ async def callbacks_selected_subject(callback: CallbackQuery):
             if len(local_user_select) < 3:
                 local_user_select.append(sub)
             else:
-                await callback.message.answer("Ви вже обрали максимальну кількість предметів❗")
+                await bot.send_message(chat_id=callback.from_user.id,
+                                       text="Ви вже обрали максимальну кількість предметів❗")
                 return
 
         elif subject == "reset":
@@ -128,10 +131,11 @@ async def callbacks_selected_subject(callback: CallbackQuery):
 
         if action == "finish":
             if len(local_user_select) < 3:
-                await callback.message.answer("Ви обрали недостатню кількість предметів❗")
+                await bot.send_message(chat_id=callback.from_user.id,
+                                       text="Ви обрали недостатню кількість предметів❗")
                 return
             else:
-                await callback.message.edit_text(f"Ви вибрали: {user_value} предмет(-а)")
+                await callback.message.edit_text(f"Ви вибрали: {user_value} предмета")
 
                 for value in local_user_select:
                     selected_subject = database.get_selected_subject(value['name'])
@@ -145,7 +149,8 @@ async def callbacks_selected_subject(callback: CallbackQuery):
                 for row in all_subject:
                     message_text += f"- {row[0]}\n"
 
-                await callback.message.answer(message_text)
+                await bot.send_message(chat_id=callback.from_user.id,
+                                       text=message_text)
                 await callback.message.answer("Ваш розклад:",
                                               reply_markup=kb.get_all_schedule())
                 return
@@ -176,18 +181,39 @@ async def start_schedule(message: Message):
 @dp.callback_query(F.data == "schedule")
 async def callback_schedule(callback: CallbackQuery):
     with suppress(TelegramBadRequest):
-        global user_group, user_select
+        # global user_group, user_select
 
-        combined_data = {}
+        local_user_group = user_group.get(callback.from_user.id, {})
+        local_user_select = user_select.get(callback.from_user.id, [])
 
-        for user_id, group_data in user_group.items():
-            if user_id in user_select:
-                selected_subjects = user_select[user_id]
-                combined_data[user_id] = {'group': group_data['group'], 'selected_subjects': selected_subjects}
+        info_group = ""
+        info_select = []
 
-        print(combined_data)
+        for i in local_user_group.values():
+            # for j in i.values():
+            info_group = i
+
+        for i in local_user_select:
+            for j in i.values():
+                info_select.append(j)
+
+        info_select_tuple = tuple(info_select)
+
+        # combined_data = {}
+        #
+        # for user_id, group_data in user_group.items():
+        #     if user_id in user_select:
+        #         selected_subjects = user_select[user_id]
+        #         combined_data[user_id] = {'group': group_data['group'], 'selected_subjects': selected_subjects}
+        #
+        # print(combined_data)
+
         print(user_group)
         print(user_select)
+        print(info_group)
+        print(info_select_tuple)
+
+        schedule = database.get_all_subject_second_week(info_group, info_select_tuple)
 
         # for value in local_user_select:
         #     selected_subject = database.get_selected_subject(value['name'])
@@ -201,12 +227,14 @@ async def callback_schedule(callback: CallbackQuery):
         # for row in all_subject:
         #     message_text += f"- {row[0]}\n"
 
-        schedule = database.get_all_subject_second_week(user_group, user_select.value['name'])
+        print(schedule)
 
         message_text = f"Розклад:\n"
         for row in schedule:
-            message_text += f"- {row[0]}\n"
+            message_text += f"- {row[2]}\n"
 
+        await bot.send_message(chat_id=callback.from_user.id,
+                               text=message_text)
         await callback.answer()
 
 

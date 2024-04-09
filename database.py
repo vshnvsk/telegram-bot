@@ -127,16 +127,6 @@ def get_all_subject_first_week(user_group, user_select):
 
 
 def get_all_subject_second_week(user_group, user_select):
-    info = []
-
-    for i in user_select.values():
-        for j in i:
-            for k in j.values():
-                info.append(k)
-                print(k)
-
-    info_tuple = tuple(info)
-
     cursor.execute(f"SELECT "
                    f"sub.weekday, "
                    f"sub.id_call, "
@@ -203,7 +193,7 @@ def get_all_subject_second_week(user_group, user_select):
                    f"JOIN "
                    f"Call_Schedule ON Call_Schedule.id_call = Elective_Subjects.id_call "
                    f"WHERE "
-                   f"abbreviation IN {info_tuple}"
+                   f"abbreviation IN {user_select}"
                    f"AND Elective_Subjects.group_{user_group} = 1 "
                    f"AND (Elective_Subjects.number_of_audience <> '8-325' "
                    f"OR Elective_Subjects.name != 'Теорія інформації та кодування') "
