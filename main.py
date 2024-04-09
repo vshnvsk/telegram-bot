@@ -1,8 +1,10 @@
 import asyncio
+import calendar
 import logging
 import os
 import sys
 
+from aiogram.enums import ParseMode
 from dotenv import load_dotenv
 
 from aiogram import Bot, Dispatcher
@@ -151,6 +153,7 @@ async def callbacks_selected_subject(callback: CallbackQuery):
 
                 await bot.send_message(chat_id=callback.from_user.id,
                                        text=message_text)
+                await bot.send_message(chat_id=callback.from_user.id, text="📆")
                 await callback.message.answer("Ваш розклад:",
                                               reply_markup=kb.get_all_schedule())
                 return
@@ -181,8 +184,6 @@ async def start_schedule(message: Message):
 @dp.callback_query(F.data == "schedule")
 async def callback_schedule(callback: CallbackQuery):
     with suppress(TelegramBadRequest):
-        # global user_group, user_select
-
         local_user_group = user_group.get(callback.from_user.id, {})
         local_user_select = user_select.get(callback.from_user.id, [])
 
@@ -190,7 +191,6 @@ async def callback_schedule(callback: CallbackQuery):
         info_select = []
 
         for i in local_user_group.values():
-            # for j in i.values():
             info_group = i
 
         for i in local_user_select:
@@ -199,42 +199,39 @@ async def callback_schedule(callback: CallbackQuery):
 
         info_select_tuple = tuple(info_select)
 
-        # combined_data = {}
-        #
-        # for user_id, group_data in user_group.items():
-        #     if user_id in user_select:
-        #         selected_subjects = user_select[user_id]
-        #         combined_data[user_id] = {'group': group_data['group'], 'selected_subjects': selected_subjects}
-        #
-        # print(combined_data)
-
         print(user_group)
         print(user_select)
         print(info_group)
         print(info_select_tuple)
 
-        schedule = database.get_all_subject_second_week(info_group, info_select_tuple)
-
-        # for value in local_user_select:
-        #     selected_subject = database.get_selected_subject(value['name'])
-        #     all_subject += selected_subject
-        #
-        # if not all_subject:
-        #     await callback.message.answer("Nothing(")
-        #     return await callback.answer()
-        #
-        # message_text = f"Перелік вибіркових дисциплін:\n"
-        # for row in all_subject:
-        #     message_text += f"- {row[0]}\n"
+        schedule = database.get_all_subject_first_week(info_group, info_select_tuple)
 
         print(schedule)
 
-        message_text = f"Розклад:\n"
-        for row in schedule:
-            message_text += f"- {row[2]}\n"
 
-        await bot.send_message(chat_id=callback.from_user.id,
-                               text=message_text)
+
+        previous_weekday = ""
+        message_schedule = ""
+
+        for values in schedule:
+            weekday = values[0]
+            if weekday != previous_weekday:
+                if previous_weekday:
+                    await bot.send_message(chat_id=callback.from_user.id, text=message_schedule,
+                                           parse_mode=ParseMode.HTML)
+                    await asyncio.sleep(1)
+                message_schedule = f"📆<b>{weekday}:</b>\n➖➖➖➖➖➖➖➖➖➖➖➖\n"
+                previous_weekday = weekday
+            message_schedule += f"<b>{values[1]}. {values[2]}</b>\n"
+            message_schedule += f"     ▫ {values[3]} {values[4]}\n"
+            message_schedule += f"     ▫ {values[5]}\n"
+            message_schedule += f"     ▫ {values[6]} ауд.\n"
+            message_schedule += f"     ▫ {values[7]}-{values[8]}\n"
+            message_schedule += f"     ▫ {values[9]}\n"
+
+        await bot.send_message(chat_id=callback.from_user.id, text=message_schedule, parse_mode=ParseMode.HTML)
+        await asyncio.sleep(1)
+
         await callback.answer()
 
 
