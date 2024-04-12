@@ -77,7 +77,8 @@ async def callback_group(callback: CallbackQuery):
         print(f"User ID: {callback.from_user.id}, Group: {group}")
 
         await bot.send_message(chat_id=callback.from_user.id,
-                               text=message_text)
+                               text=message_text,
+                               reply_markup=kb.get_info())
         await callback.message.edit_reply_markup(reply_markup=None)
         await callback.message.answer("Виберіть 3 додаткових предмета:",
                                       reply_markup=kb.get_keyboard_select(False))
@@ -230,7 +231,8 @@ async def callback_schedule(callback: CallbackQuery):
             weekday = values[0]
             if weekday != previous_weekday:
                 if previous_weekday:
-                    await bot.send_message(chat_id=callback.from_user.id, text=message_schedule,
+                    await bot.send_message(chat_id=callback.from_user.id,
+                                           text=message_schedule,
                                            parse_mode=ParseMode.HTML)
                     await asyncio.sleep(1)
                 message_schedule = f"📆<b>{weekday}:</b>\n➖➖➖➖➖➖➖➖➖➖➖➖\n"
@@ -242,11 +244,12 @@ async def callback_schedule(callback: CallbackQuery):
             message_schedule += f"     ▫ {values[7]}-{values[8]}\n"
             message_schedule += f"     ▫ {values[9]}\n"
 
-        await bot.send_message(chat_id=callback.from_user.id, text=message_schedule, parse_mode=ParseMode.HTML)
+        await bot.send_message(chat_id=callback.from_user.id,
+                               text=message_schedule,
+                               parse_mode=ParseMode.HTML)
         await asyncio.sleep(1)
 
         await callback.message.edit_reply_markup(reply_markup=None)
-        await callback.message.answer("Додаткова інформація:", reply_markup=kb.get_info())
         await callback.answer()
 
 
