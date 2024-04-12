@@ -43,15 +43,11 @@ async def command_start_handler(message: Message):
     global get_id
     get_id = message.from_user.id
 
-    print(get_id)
-
     user_select[message.from_user.id] = []
     user_data[message.from_user.id] = 0
     await message.answer_sticker(sticker="CAACAgIAAxkBAAEL0ORmCBKDjapEhTrTGNJJA-eSAtOFtwAChwIAAladvQpC7XQrQFfQkDQE")
-    await message.answer(f"Привіт, {message.from_user.full_name}! Вибери свою підгрупу:",
+    await message.answer(f"Привіт, {message.from_user.full_name}🧑🏻‍🎓! Вибери свою підгрупу:",
                          reply_markup=kb.start())
-
-    await send_notification()
 
 
 @dp.callback_query(F.data.startswith("group_"))
@@ -74,7 +70,7 @@ async def callback_group(callback: CallbackQuery):
             await callback.message.answer("Nothing(")
             return await callback.answer()
 
-        message_text = f"Перелік основних дисциплін:\n"
+        message_text = f"Перелік основних дисциплін: 📚\n"
         for row in ordinary_subject:
             message_text += f"- {row[0]}\n"
 
@@ -156,7 +152,7 @@ async def callbacks_selected_subject(callback: CallbackQuery):
                     await callback.message.answer("Nothing(")
                     return await callback.answer()
 
-                message_text = f"Перелік вибіркових дисциплін:\n"
+                message_text = f"Перелік вибіркових дисциплін: 📚\n"
                 for row in all_subject:
                     message_text += f"- {row[0]}\n"
 
@@ -250,6 +246,7 @@ async def callback_schedule(callback: CallbackQuery):
         await asyncio.sleep(1)
 
         await callback.message.edit_reply_markup(reply_markup=None)
+        await callback.message.answer("Додаткова інформація:", reply_markup=kb.get_info())
         await callback.answer()
 
 
@@ -266,6 +263,33 @@ async def send_notification():
                                    reply_markup=kb.get_all_schedule())
     else:
         print("I don't know anyone(")
+
+
+# --------------------------For other options---------------------------
+@dp.message(F.text.lower() == "коли заліки?")
+async def when_session(message: Message):
+    await message.reply("🔹З 15 по 31 травня")
+
+
+@dp.message(F.text.lower() == "коли сесія?")
+async def when_test(message: Message):
+    await message.reply("🔸З 1 по 19 червня")
+
+
+@dp.message(F.text.lower() == "скинути налаштування❌")
+async def reset_settings(message: Message):
+    global get_id
+    get_id = None
+    get_id = message.from_user.id
+
+    user_select[message.from_user.id] = []
+    user_data[message.from_user.id] = 0
+    await message.answer_sticker(sticker="CAACAgIAAxkBAAEL5wFmGWPhnFAzYtZh_Lw0EnOCkfGCrgACXgAD5KDOB11SuKzKYMdkNAQ")
+    await bot.delete_message(chat_id=message.chat.id,
+                             message_id=message.message_id)
+    await bot.send_message(chat_id=message.from_user.id,
+                           text=f"Привіт знову, {message.from_user.full_name}🧑🏻‍🎓! Вибери свою підгрупу:",
+                           reply_markup=kb.start())
 
 
 async def main() -> None:

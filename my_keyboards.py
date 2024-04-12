@@ -1,4 +1,4 @@
-from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
+from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, KeyboardButton, ReplyKeyboardMarkup
 
 
 def start() -> InlineKeyboardMarkup:
@@ -37,5 +37,15 @@ def get_all_schedule() -> InlineKeyboardMarkup:
     buttons = InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton(text="Розклад🗓️", callback_data="schedule")]
     ])
+
+    return buttons
+
+
+def get_info() -> ReplyKeyboardMarkup:
+    buttons = ReplyKeyboardMarkup(keyboard=[
+        [KeyboardButton(text="Коли заліки?")],
+        [KeyboardButton(text="Коли сесія?")],
+        [KeyboardButton(text="Скинути налаштування❌")]
+    ], resize_keyboard=True, input_field_placeholder="Виберіть")
 
     return buttons
