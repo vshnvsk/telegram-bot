@@ -22,6 +22,7 @@ user_data = {}
 user_group = {}
 user_select = {}
 name_subject = 'name'
+get_id = None
 
 load_dotenv()
 key = os.getenv('API_token')
@@ -39,11 +40,18 @@ async def on_startup(_):
 
 @dp.message(Command("start"))
 async def command_start_handler(message: Message):
+    global get_id
+    get_id = message.from_user.id
+
+    print(get_id)
+
     user_select[message.from_user.id] = []
     user_data[message.from_user.id] = 0
     await message.answer_sticker(sticker="CAACAgIAAxkBAAEL0ORmCBKDjapEhTrTGNJJA-eSAtOFtwAChwIAAladvQpC7XQrQFfQkDQE")
     await message.answer(f"Привіт, {message.from_user.full_name}! Вибери свою підгрупу:",
                          reply_markup=kb.start())
+
+    await send_notification()
 
 
 @dp.callback_query(F.data.startswith("group_"))
@@ -75,7 +83,7 @@ async def callback_group(callback: CallbackQuery):
         await bot.send_message(chat_id=callback.from_user.id,
                                text=message_text)
         await callback.message.edit_reply_markup(reply_markup=None)
-        await callback.message.answer("Виберіть додаткові предмети:",
+        await callback.message.answer("Виберіть 3 додаткових предмета:",
                                       reply_markup=kb.get_keyboard_select(False))
 
 
@@ -84,7 +92,7 @@ async def callback_group(callback: CallbackQuery):
 @dp.message(Command("subjects"))
 async def start_elective_subject(message: Message):
     user_data[message.from_user.id] = 0
-    await message.answer("Виберіть додаткові предмети:",
+    await message.answer("Виберіть 3 додаткових предмета:",
                          reply_markup=kb.get_keyboard_select(False))
 
 
@@ -245,10 +253,28 @@ async def callback_schedule(callback: CallbackQuery):
         await callback.answer()
 
 
-async def main() -> None:
-    await on_startup(None)
-    await dp.start_polling(bot, skip_updates=True)
+# -----------------------------For the notification------------------------------
 
+async def send_notification():
+    global get_id
+    current_datetime = datetime.now()
+
+    if get_id is not None:
+        if current_datetime.weekday() == 6 and current_datetime.hour >= 20:
+            await bot.send_message(chat_id=get_id,
+                                   text=f"Привіт! Ось ваш розклад на наступний тиждень:",
+                                   reply_markup=kb.get_all_schedule())
+    else:
+        print("I don't know anyone(")
+
+
+async def main() -> None:
+    scheduler = AsyncIOScheduler()
+    scheduler.add_job(send_notification, "cron", day_of_week="sun", hour=20, minute=0)
+    scheduler.start()
+
+    await on_startup(None)
+    await dp.start_polling(bot, skip_updates=True),
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO, stream=sys.stdout)
