@@ -215,6 +215,9 @@ async def callback_schedule(callback: CallbackQuery):
         current_date = datetime.now()
         week_number = current_date.isocalendar()[1]
 
+        if current_date.weekday() == 6:
+            week_number -= 1
+
         if week_number % 2 == 0:
             await bot.send_message(chat_id=callback.from_user.id,
                                    text="Зараз навчання за ІІ-им тижнем")
