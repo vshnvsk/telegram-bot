@@ -1,5 +1,6 @@
 import asyncio
 from datetime import datetime
+import calendar
 import logging
 import os
 import sys
@@ -210,6 +211,7 @@ async def callback_schedule(callback: CallbackQuery):
         print(info_group)
         print(info_select_tuple)
 
+        calendar.setfirstweekday(calendar.SUNDAY)
         current_date = datetime.now()
         week_number = current_date.isocalendar()[1]
 
