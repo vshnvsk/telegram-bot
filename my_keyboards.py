@@ -1,4 +1,5 @@
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, KeyboardButton, ReplyKeyboardMarkup
+import calendar
 
 
 def start() -> InlineKeyboardMarkup:
@@ -47,5 +48,28 @@ def get_info() -> ReplyKeyboardMarkup:
         [KeyboardButton(text="Коли сесія?")],
         [KeyboardButton(text="Скинути налаштування❌")]
     ], resize_keyboard=True, input_field_placeholder="Виберіть")
+
+    return buttons
+
+
+def test_keyboard() -> InlineKeyboardMarkup:
+    buttons = InlineKeyboardMarkup(inline_keyboard=[
+        [
+            InlineKeyboardButton(text="Пн", callback_data="weekday_monday"),
+            InlineKeyboardButton(text="Вт", callback_data="weekday_tuesday"),
+            InlineKeyboardButton(text="Ср", callback_data="weekday_wednesday"),
+            InlineKeyboardButton(text="Чт", callback_data="weekday_thursday"),
+            InlineKeyboardButton(text="Пт", callback_data="weekday_friday")
+        ],
+        [InlineKeyboardButton(text="Посилання", callback_data="info")]
+    ])
+
+    return buttons
+
+
+def test_keyboard_2() -> InlineKeyboardMarkup:
+    buttons = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="Назад", callback_data="back")]
+    ])
 
     return buttons

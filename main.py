@@ -79,7 +79,7 @@ async def callback_group(callback: CallbackQuery):
 
         await bot.send_message(chat_id=callback.from_user.id,
                                text=message_text,
-                               reply_markup=kb.get_info())
+                               reply_markup=kb.get_info())   # зробити щось із кнопками, кудись додати
         await callback.message.edit_reply_markup(reply_markup=None)
         await callback.message.answer("Виберіть 3 додаткових предмета:",
                                       reply_markup=kb.get_keyboard_select(False))
@@ -232,6 +232,15 @@ async def callback_schedule(callback: CallbackQuery):
         previous_weekday = ""
         message_schedule = ""
 
+        emoji_map = {
+            '1': '1️⃣',
+            '2': '2️⃣',
+            '3': '3️⃣',
+            '4': '4️⃣',
+            '5': '5️⃣',
+            '6': '6️⃣'
+        }
+
         for values in schedule:
             weekday = values[0]
             if weekday != previous_weekday:
@@ -242,12 +251,13 @@ async def callback_schedule(callback: CallbackQuery):
                     await asyncio.sleep(1)
                 message_schedule = f"📆<b>{weekday}:</b>\n➖➖➖➖➖➖➖➖➖➖➖➖\n"
                 previous_weekday = weekday
-            message_schedule += f"<b>{values[1]}. {values[2]}</b>\n"
-            message_schedule += f"     ▫ {values[3]} {values[4]}\n"
-            message_schedule += f"     ▫ {values[5]}\n"
-            message_schedule += f"     ▫ {values[6]} ауд.\n"
-            message_schedule += f"     ▫ {values[7]}-{values[8]}\n"
-            message_schedule += f"     ▫ {values[9]}\n"
+            lesson_number = ''.join([emoji_map.get(char, char) for char in str(values[1])])
+            message_schedule += f"<b>{lesson_number} {values[2]}</b>\n"
+            message_schedule += f"     🎓 {values[3]} {values[4]}\n"
+            message_schedule += f"     ◻️ {values[5]}\n"
+            message_schedule += f"     📍 {values[6]} ауд.\n"
+            message_schedule += f"     🕓 {values[7]}-{values[8]}\n"
+            message_schedule += f"     📝 {values[9]}\n\n"
 
         await bot.send_message(chat_id=callback.from_user.id,
                                text=message_schedule,
@@ -298,6 +308,90 @@ async def reset_settings(message: Message):
     await bot.send_message(chat_id=message.from_user.id,
                            text=f"Привіт знову, {message.from_user.full_name}🧑🏻‍🎓! Вибери свою підгрупу:",
                            reply_markup=kb.start())
+
+
+# -----------------Test-----------------
+async def send_message_with_keyboard(chat_id):
+    await bot.send_message(chat_id=chat_id,
+                           text="Ваш розклад готовий! Виберіть день тижня:",
+                           reply_markup=kb.test_keyboard())
+
+
+@dp.message(Command('test'))
+async def send_start(message: Message):
+    await send_message_with_keyboard(message.chat.id)
+
+
+@dp.callback_query(F.data.startswith('weekday_'))
+async def process_weekday_callback(callback: CallbackQuery):
+    with ((suppress(TelegramBadRequest))):
+        await callback.answer()
+        weekday = callback.data.split('_')[1]
+
+        weekday_map = {
+            'monday': 'Понеділок',
+            'tuesday': 'Вівторок',
+            'wednesday': 'Середа',
+            'thursday': 'Четвер',
+            'friday': "П''ятниця"
+        }
+
+        name = weekday_map[weekday]
+
+        if name:
+            schedule = database.test_week(name)
+
+        previous_weekday = ""
+        message_schedule = ""
+
+        emoji_map = {
+            '1': '1️⃣',
+            '2': '2️⃣',
+            '3': '3️⃣',
+            '4': '4️⃣',
+            '5': '5️⃣',
+            '6': '6️⃣'
+        }
+
+        for values in schedule:
+            weekday = values[0]
+            if weekday != previous_weekday:
+                if previous_weekday:
+                    await bot.edit_message_text(chat_id=callback.message.chat.id,
+                                                message_id=callback.message.message_id,
+                                                text=message_schedule,
+                                                reply_markup=kb.test_keyboard(),
+                                                parse_mode=ParseMode.HTML)
+                    await asyncio.sleep(1)
+                message_schedule = f"📆<b>{weekday}:</b>\n➖➖➖➖➖➖➖➖➖➖➖➖\n"
+                previous_weekday = weekday
+            lesson_number = ''.join([emoji_map.get(char, char) for char in str(values[1])])
+            message_schedule += f"<b>{lesson_number} {values[2]}</b>\n"
+            message_schedule += f"     🎓 {values[3]} {values[4]}\n"
+            message_schedule += f"     ◻️ {values[5]}\n"
+            message_schedule += f"     📍 {values[6]} ауд.\n"
+            message_schedule += f"     🕓 {values[7]}-{values[8]}\n"
+            message_schedule += f"     📝 {values[9]}\n\n"
+
+        await bot.edit_message_text(chat_id=callback.message.chat.id,
+                                    message_id=callback.message.message_id,
+                                    text=message_schedule,
+                                    reply_markup=kb.test_keyboard(),
+                                    parse_mode=ParseMode.HTML)
+
+        await asyncio.sleep(1)
+
+
+@dp.callback_query(F.data == "info")
+async def test_callback_button_info(callback: CallbackQuery):
+    with suppress(TelegramBadRequest):
+        await callback.message.edit_reply_markup(reply_markup=kb.test_keyboard_2())
+
+
+@dp.callback_query(F.data == "back")
+async def test_callback_button_back(callback: CallbackQuery):
+    with suppress(TelegramBadRequest):
+        await callback.message.edit_reply_markup(reply_markup=kb.test_keyboard())
 
 
 async def main() -> None:
