@@ -1,5 +1,4 @@
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, KeyboardButton, ReplyKeyboardMarkup
-import calendar
 
 
 def start() -> InlineKeyboardMarkup:
@@ -23,21 +22,14 @@ def get_keyboard_select(has_selection: bool) -> InlineKeyboardMarkup:
         [InlineKeyboardButton(text="Протоколи та сервіси Інтернет", callback_data="select_internet")],
         [InlineKeyboardButton(text="Теорія інформації та кодування", callback_data="select_infocode")],
         [InlineKeyboardButton(text="UX/UI дизайн та Web Usability", callback_data="select_webdesign")],
-        [InlineKeyboardButton(text="Практика особистої та ділової комунікації іноземною мовою", callback_data="select_english")],
+        [InlineKeyboardButton(text="Практика особистої та ділової комунікації іноземною мовою",
+                              callback_data="select_english")],
         [InlineKeyboardButton(text="Скасувати❌", callback_data="select_reset")],
         [InlineKeyboardButton(text="Готово✅", callback_data="select_finish")]
     ])
 
     if has_selection:
         buttons.insert(-1, [InlineKeyboardButton(text="Скасувати❌", callback_data="select_reset")])
-
-    return buttons
-
-
-def get_all_schedule() -> InlineKeyboardMarkup:
-    buttons = InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="Розклад🗓️", callback_data="schedule")]
-    ])
 
     return buttons
 
@@ -52,7 +44,7 @@ def get_info() -> ReplyKeyboardMarkup:
     return buttons
 
 
-def test_keyboard() -> InlineKeyboardMarkup:
+def schedule_keyboard(new_button_text=None) -> InlineKeyboardMarkup:
     buttons = InlineKeyboardMarkup(inline_keyboard=[
         [
             InlineKeyboardButton(text="Пн", callback_data="weekday_monday"),
@@ -64,12 +56,25 @@ def test_keyboard() -> InlineKeyboardMarkup:
         [InlineKeyboardButton(text="Посилання", callback_data="info")]
     ])
 
+    if new_button_text:
+        day_to_callback = {
+            'Пн✅': 'weekday_monday',
+            'Вт✅': 'weekday_tuesday',
+            'Ср✅': 'weekday_wednesday',
+            'Чт✅': 'weekday_thursday',
+            'Пт✅': 'weekday_friday'
+        }
+        for button in buttons.inline_keyboard[0]:
+            if button.callback_data == day_to_callback.get(new_button_text):
+                button.text = new_button_text
+                break
+
     return buttons
 
 
-def test_keyboard_2() -> InlineKeyboardMarkup:
+def links_keyboard() -> InlineKeyboardMarkup:
     buttons = InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="Назад", callback_data="back")]
+        [InlineKeyboardButton(text="⬅️ Назад", callback_data="back")]
     ])
 
     return buttons

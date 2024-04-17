@@ -28,7 +28,7 @@ def get_selected_subject(subject):
     return data
 
 
-def get_all_subject_first_week(user_group, user_select):
+def get_all_subject_first_week(user_group, user_select, weekday):
     cursor.execute(f"SELECT "
                    f"sub.weekday, "
                    f"sub.id_call, "
@@ -65,6 +65,7 @@ def get_all_subject_first_week(user_group, user_select):
                    f"Call_Schedule ON Call_Schedule.id_call = Ordinary_Subjects.id_call "
                    f"WHERE "
                    f"Ordinary_Subjects.group_{user_group} = 1 "
+                   f"AND Ordinary_Subjects.weekday = '{weekday}' "
                    f"AND (Ordinary_Subjects.number_of_audience <> '8-213' "
                    f"OR Ordinary_Subjects.name != 'Моделювання систем') "
                    f"AND (Ordinary_Subjects.id_call <> 3 "
@@ -96,6 +97,7 @@ def get_all_subject_first_week(user_group, user_select):
                    f"WHERE "
                    f"abbreviation IN {user_select}"
                    f"AND Elective_Subjects.group_{user_group} = 1 "
+                   f"AND Elective_Subjects.weekday = '{weekday}' "
                    f"AND (Elective_Subjects.id_call <> 4 "
                    f"OR Elective_Subjects.name != 'Програмування мобільних додатків') "
                    f"AND (Elective_Subjects.number_of_audience <> '8-117' "
@@ -108,7 +110,7 @@ def get_all_subject_first_week(user_group, user_select):
     return data
 
 
-def get_all_subject_second_week(user_group, user_select):
+def get_all_subject_second_week(user_group, user_select, weekday):
     cursor.execute(f"SELECT "
                    f"sub.weekday, "
                    f"sub.id_call, "
@@ -145,6 +147,7 @@ def get_all_subject_second_week(user_group, user_select):
                    f"Call_Schedule ON Call_Schedule.id_call = Ordinary_Subjects.id_call "
                    f"WHERE "
                    f"Ordinary_Subjects.group_{user_group} = 1 "
+                   f"AND Ordinary_Subjects.weekday = '{weekday}' "
                    f"AND (Ordinary_Subjects.number_of_audience <> '8-212' "
                    f"OR Ordinary_Subjects.name != 'Моделювання систем') "
                    f"AND (Ordinary_Subjects.id_call <> 1 "
@@ -177,6 +180,7 @@ def get_all_subject_second_week(user_group, user_select):
                    f"WHERE "
                    f"abbreviation IN {user_select}"
                    f"AND Elective_Subjects.group_{user_group} = 1 "
+                   f"AND Elective_Subjects.weekday = '{weekday}' "
                    f"AND (Elective_Subjects.number_of_audience <> '8-325' "
                    f"OR Elective_Subjects.name != 'Теорія інформації та кодування') "
                    f") AS sub "
