@@ -53,8 +53,7 @@ def schedule_keyboard(new_button_text=None) -> InlineKeyboardMarkup:
             InlineKeyboardButton(text="Чт", callback_data="weekday_thursday"),
             InlineKeyboardButton(text="Пт", callback_data="weekday_friday")
         ],
-        [InlineKeyboardButton(text="📎 Посилання", callback_data="links")],
-        [InlineKeyboardButton(text="⚙️ Налаштування", callback_data="settings")]
+        [InlineKeyboardButton(text="📎 Посилання", callback_data="links")]
     ])
 
     if new_button_text:
