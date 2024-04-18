@@ -21,6 +21,7 @@ from aiogram.methods import DeleteWebhook
 import database
 import my_keyboards as kb
 
+user_states = {}
 user_data = {}
 user_group = {}
 user_select = {}
@@ -96,20 +97,12 @@ async def callback_group(callback: CallbackQuery):
         await bot.send_message(chat_id=callback.from_user.id,
                                text=message_text,
                                parse_mode=ParseMode.HTML)
-        await callback.message.answer(text="<b>Виберіть 3️⃣ додаткових предмета:</b>",
+        await callback.message.answer(text="<b>Вибери 3️⃣ додаткових предмета:</b>",
                                       reply_markup=kb.get_keyboard_select(False),
                                       parse_mode=ParseMode.HTML)
 
 
 # --------------------------------For the selection button(elective subject)------------------------------
-
-# @dp.message(Command("subjects"))
-# async def start_elective_subject(message: Message):
-#     user_data[message.from_user.id] = 0
-#     await message.answer("Виберіть 3 додаткових предмета:",
-#                          reply_markup=kb.get_keyboard_select(False))
-
-
 async def update_num_text(message: Message, num_value: int):
     with suppress(TelegramBadRequest):
         await message.edit_text(
@@ -145,7 +138,7 @@ async def callbacks_selected_subject(callback: CallbackQuery):
                 local_user_select.append(sub)
             else:
                 await bot.send_message(chat_id=callback.from_user.id,
-                                       text="Ви вже обрали максимальну кількість предметів❗")
+                                       text="Ти вже обрав максимальну кількість предметів❗")
                 return
 
         elif subject == "reset":
@@ -158,10 +151,10 @@ async def callbacks_selected_subject(callback: CallbackQuery):
         if action == "finish":
             if len(local_user_select) < 3:
                 await bot.send_message(chat_id=callback.from_user.id,
-                                       text="Ви обрали недостатню кількість предметів❗")
+                                       text="Ти обрав недостатню кількість предметів❗")
                 return
             else:
-                await callback.message.edit_text(text=f"<b>Ви вибрали:</b> {user_value} предмета",
+                await callback.message.edit_text(text=f"<b>Ти вибрав:</b> {user_value} предмета",
                                                  parse_mode=ParseMode.HTML)
 
                 for value in local_user_select:
@@ -182,8 +175,8 @@ async def callbacks_selected_subject(callback: CallbackQuery):
                                        parse_mode=ParseMode.HTML)
                 sticker = "CAACAgIAAxkBAAEL7oZmH8LmDUUNYc51RyQ1P5k8Bud0ywACjwADFkJrCr24snHVnwbiNAQ"
                 await callback.message.answer_sticker(sticker)
-                await callback.message.answer(text=f"{callback.from_user.full_name}, ваш розклад готовий✅\n\n"
-                                                   f"Виберіть день:",
+                await callback.message.answer(text=f"{callback.from_user.full_name}, твій розклад готовий✅\n\n"
+                                                   f"Вибери день:",
                                               reply_markup=kb.schedule_keyboard(),
                                               parse_mode=ParseMode.HTML)
                 return
@@ -203,30 +196,33 @@ async def callbacks_selected_subject(callback: CallbackQuery):
         return
 
 
-# -----------------------------For the notification------------------------------
-async def send_notification():
-    # Need to change
-    global get_id
-    current_datetime = datetime.now()
-
-    if get_id is not None:
-        if current_datetime.weekday() == 6 and current_datetime.hour >= 20:
-            await bot.send_message(chat_id=get_id,
-                                   text=f"Привіт! Ось ваш розклад на наступний тиждень:",
-                                   reply_markup=kb.schedule_keyboard())
-    else:
-        print("I don't know anyone(")
-
-
 # --------------------------For other options---------------------------
 @dp.message(F.text.lower() == "коли заліки?")
 async def when_session(message: Message):
-    await message.reply("🔹З 15 по 31 травня")
+    await message.reply("🔹З 15 по 31 травня(для всіх груп):\n "
+                        "  1️⃣ ЗУВД \n"
+                        "  🎓 Комісарчук В.В.\n"
+                        "  📅 16.05.24\n\n"
+                        "  2️⃣ Моделювання систем*\n"
+                        "  🎓 Антонюк С.В.\n"
+                        "  📅 17.05.24\n\n"
+                        "  3️⃣ Протоколи та сервіси Інтернет\n"
+                        "  🎓 Антонюк С.В.\n"
+                        "  📅 21.05.24\n\n"
+                        "  4️⃣ Теорія інформації та кодування\n"
+                        "  🎓 Воробець Г.І.\n"
+                        "  📅 21.05.24\n\n"
+                        "  5️⃣ Програмування мобільних додатків\n"
+                        "  🎓 Коцур М.П.\n"
+                        "  📅 23.05.24\n\n"
+                        "  6️⃣ Програмування мовою Ruby\n"
+                        "  🎓 Фратавчан В.Г.\n"
+                        "  📅 24.05.24\n\n")
 
 
 @dp.message(F.text.lower() == "коли сесія?")
 async def when_test(message: Message):
-    await message.reply("🔸З 1 по 19 червня")
+    await message.reply("🔸З 1 по 21 червня")
 
 
 @dp.message(F.text.lower() == "скинути налаштування❌")
@@ -323,18 +319,22 @@ async def process_weekday_callback(callback: CallbackQuery):
             '6': '6️⃣'
         }
 
-        for values in schedule:
-            weekday = values[0]
-            if weekday != previous_weekday:
-                message_schedule += f"📆<b>{weekday}:</b>\n➖➖➖➖➖➖➖➖➖➖➖➖\n"
-                previous_weekday = weekday
-            lesson_number = ''.join([emoji_map.get(char, char) for char in str(values[1])])
-            message_schedule += f"<b>{lesson_number} {values[2]}</b>\n"
-            message_schedule += f"     🎓 {values[3]} {values[4]}\n"
-            message_schedule += f"     ◻️ {values[5]}\n"
-            message_schedule += f"     📍 {values[6]} ауд.\n"
-            message_schedule += f"     🕓 {values[7]}-{values[8]}\n"
-            message_schedule += f"     📝 {values[9]}\n\n"
+        if not schedule:
+            message_schedule += "Вітаю! Сьогодні в тебе вихідний, для тебе пар нема🥳"
+        else:
+            for values in schedule:
+                weekday = values[0]
+                if weekday != previous_weekday:
+                    message_schedule += f"📆<b>{weekday}:</b>\n➖➖➖➖➖➖➖➖➖➖➖➖\n"
+                    previous_weekday = weekday
+
+                lesson_number = ''.join([emoji_map.get(char, char) for char in str(values[1])])
+                message_schedule += f"<b>{lesson_number} {values[2]}</b>\n"
+                message_schedule += f"     🎓 {values[3]} {values[4]}\n"
+                message_schedule += f"     ◻️ {values[5]}\n"
+                message_schedule += f"     📍 {values[6]} ауд.\n"
+                message_schedule += f"     🕓 {values[7]}-{values[8]}\n"
+                message_schedule += f"     📝 {values[9]}\n\n"
 
         await bot.edit_message_text(chat_id=callback.message.chat.id,
                                     message_id=callback.message.message_id,
@@ -345,21 +345,100 @@ async def process_weekday_callback(callback: CallbackQuery):
         await asyncio.sleep(1)
 
 
-@dp.callback_query(F.data == "info")
-async def test_callback_button_info(callback: CallbackQuery):
+@dp.callback_query(F.data == "links")
+async def callback_button_links(callback: CallbackQuery):
     with suppress(TelegramBadRequest):
+        await callback.answer()
+
+        user_states[callback.from_user.id] = "schedule"
+        await bot.edit_message_text(chat_id=callback.message.chat.id,
+                                    message_id=callback.message.message_id,
+                                    text="Вибери потрібний навчальний ресурс нижче⬇\n")
         await callback.message.edit_reply_markup(reply_markup=kb.links_keyboard())
 
 
-@dp.callback_query(F.data == "back")
-async def test_callback_button_back(callback: CallbackQuery):
+@dp.callback_query(F.data.startswith("link_"))
+async def callback_button_get_link(callback: CallbackQuery):
     with suppress(TelegramBadRequest):
-        await callback.message.edit_reply_markup(reply_markup=kb.schedule_keyboard())
+        await callback.answer()
+
+        local_user_group = user_group.get(callback.from_user.id, {})
+        local_user_select = user_select.get(callback.from_user.id, [])
+
+        info_group = ""
+        info_select = []
+
+        for i in local_user_group.values():
+            info_group = i
+
+        for i in local_user_select:
+            for j in i.values():
+                info_select.append(j)
+
+        info_select_tuple = tuple(info_select)
+
+        name_link = callback.data.split("_")[1]
+
+        links = database.get_links(info_group, info_select_tuple, name_link)
+
+        message_links = ""
+
+        if not links:
+            message_links += "Упс, для тебе поки нічого нема("
+        else:
+            for values in links:
+                message_links += f"📚 <b>{values[0]}:</b>\n➖➖➖➖➖➖➖➖➖➖➖➖\n"
+                message_links += f"   🔗 {values[1]}\n"
+                if values[2] is None:
+                    password = "Без пароля"
+                    message_links += f"   🔓 {password}\n\n"
+                else:
+                    password = values[2]
+                    message_links += f"   🔐 \"{password}\"\n\n"
+
+        await bot.edit_message_text(chat_id=callback.message.chat.id,
+                                    message_id=callback.message.message_id,
+                                    text=message_links,
+                                    reply_markup=kb.links_keyboard(),
+                                    parse_mode=ParseMode.HTML)
+
+
+@dp.callback_query(F.data == "back")
+async def callback_button_back(callback: CallbackQuery):
+    with suppress(TelegramBadRequest):
+        await callback.answer()
+
+        state = user_states.get(callback.from_user.id, "schedule")
+        if state == "schedule":
+            await bot.edit_message_text(chat_id=callback.message.chat.id,
+                                        message_id=callback.message.message_id,
+                                        text="Виберіть день тижня:")
+            await callback.message.edit_reply_markup(reply_markup=kb.schedule_keyboard())
+        elif state == "links":
+            await bot.edit_message_text(chat_id=callback.message.chat.id,
+                                        message_id=callback.message.message_id,
+                                        text="Виберіть потрібний вам ресурс нижче⬇")
+            await callback.message.edit_reply_markup(reply_markup=kb.links_keyboard())
+
+
+# -----------------------------For the notification------------------------------
+async def send_notification():
+    # Need to change
+    global get_id
+    current_datetime = datetime.now()
+
+    if get_id is not None:
+        if current_datetime.weekday() == 6 and current_datetime.hour >= 10 and current_datetime.minute == 0:
+            await bot.send_message(chat_id=get_id,
+                                   text=f"Привіт! Завтра почнеться новий тиждень. Тицьни на день в розкладі, "
+                                        f"який тебе цікавить)")
+    else:
+        print("I don't know anyone(")
 
 
 async def main() -> None:
     scheduler = AsyncIOScheduler()
-    scheduler.add_job(send_notification, "cron", day_of_week="sun", hour=20, minute=0)
+    scheduler.add_job(send_notification, "cron", day_of_week="sun", hour=10, minute=0)
     scheduler.start()
 
     await on_startup(None)
