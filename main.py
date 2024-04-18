@@ -345,6 +345,7 @@ async def process_weekday_callback(callback: CallbackQuery):
         await asyncio.sleep(1)
 
 
+# --------------------------For links-----------------------------
 @dp.callback_query(F.data == "links")
 async def callback_button_links(callback: CallbackQuery):
     with suppress(TelegramBadRequest):
@@ -423,7 +424,6 @@ async def callback_button_back(callback: CallbackQuery):
 
 # -----------------------------For the notification------------------------------
 async def send_notification():
-    # Need to change
     global get_id
     current_datetime = datetime.now()
 
